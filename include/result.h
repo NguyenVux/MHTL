@@ -3,7 +3,7 @@
 #include <type_traits>
 #include <optional>
 #include <utility>
-
+#include "utils.h"
 namespace MHTL
 {
 
@@ -44,15 +44,6 @@ public:
 	}
 };
 
-template<class T,template<class> class BASE_TEMPLATE>
-struct is_template_of : std::false_type{
-
-};
-
-template<class T,template<class> class BASE_TEMPLATE>
-struct is_template_of<BASE_TEMPLATE<T>,BASE_TEMPLATE> : std::true_type{
-
-};
 
 template<class Payload_t,class error_t>
 class result{
