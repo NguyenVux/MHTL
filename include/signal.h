@@ -1,45 +1,11 @@
 #pragma once
-#include <functional>
 #include <type_traits>
-#include <iostream>
-#include <string>
 #include "utils.h"
+#include "signals/signals.hpp"
 
 
 namespace MHTL
 {
-template<class FUNC>
-class signalImpl_t{
-public:
-    using signature = FUNC;
-    static_assert(std::is_function<FUNC>::value,"cannot create non-callable signal");
-private:
-    std::function<FUNC> m_function;
-   
-public:
-    void emit()
-    {
-        m_function();
-    }
-    void connect(std::function<signature> function)
-    {
-        m_function = function;
-    }
-};
-
-template<typename AccessKey, typename PublicType, typename PrivateType>
-class AccessImpl {
-public:
-    static const PrivateType& access(const PublicType& publicType) {
-        return publicType.get_private_object();
-    }
-
-    static PrivateType& access(PublicType& publicType) {
-        return publicType.get_private_object();
-    }
-};
-
-
 template<typename AccessKey,typename PublicType>
 auto access(PublicType& signal) -> typename PublicType::private_t&
 {
@@ -52,7 +18,7 @@ auto access(const PublicType& signal) -> const typename PublicType::private_t&
 }
 
 template<class SignalImpl,class AccessKey>
-class public_signal_t{
+class signal_validator{
     static_assert(is_template_of<SignalImpl, signalImpl_t>::value,"This is not a signal impl");
 public:
     using public_t = public_signal_t<SignalImpl,AccessKey>;
@@ -71,5 +37,5 @@ private:
 
 
 template<typename Signature,typename AccessKey>
-using signal_t = public_signal_t<signalImpl_t<Signature>, AccessKey>;
+using signal_t = signal_validator<fteng::SignalImpl<Signature>, AccessKey>;
 } // namespace MHTL
