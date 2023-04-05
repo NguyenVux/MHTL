@@ -4,8 +4,25 @@
 #include "signals/signals.hpp"
 
 
+
 namespace MHTL
 {
+
+template<typename AccessKey, typename Signature> class signal_validator;
+
+template<typename AccessKey, typename PublicType,typename PrivateType>
+struct AccessImpl
+{
+    static const PrivateType &access(const PublicType& signal_val)
+    {
+		return signal_val.get_private_object();
+    }
+    static PrivateType &access(PublicType& signal_val)
+    {
+		return signal_val.get_private_object();
+    }
+};
+
 template<typename AccessKey,typename PublicType>
 auto access(PublicType& signal) -> typename PublicType::private_t&
 {
@@ -17,16 +34,35 @@ auto access(const PublicType& signal) -> const typename PublicType::private_t&
     return AccessImpl<AccessKey, PublicType, typename PublicType::private_t>::access(signal);
 }
 
-template<class SignalImpl,class AccessKey>
-class signal_validator{
-    static_assert(is_template_of<SignalImpl, signalImpl_t>::value,"This is not a signal impl");
+template<typename AccessKey, typename ...Args>
+class signal_validator<AccessKey, void(Args...)> {
 public:
-    using public_t = public_signal_t<SignalImpl,AccessKey>;
-    using private_t = SignalImpl;
-    void connect(std::function<typename private_t::signature> function)
-    {
-        m_privateSignal.connect(function);
-    }
+    using public_t = signal_validator<AccessKey, void(Args...)>;
+    using private_t = fteng::SignalImpl<void(Args...)>;
+
+
+	template<auto PMF, class C>
+	fteng::connection_raw connect(C* object) const
+	{
+		return std::move(m_privateSignal.connect<PMF,c>(func));
+	}
+
+	template<auto func>
+	fteng::connection_raw connect() const
+	{
+		return std::move(m_privateSignal.connect(func));
+	}
+
+	fteng::connection_raw connect(void(*func)(Args...)) const
+	{
+		return std::move(m_privateSignal.connect(func));
+	}
+
+	template<typename F>
+	fteng::connection connect(F&& functor) const
+	{
+		return std::move(m_privateSignal.connect(functor));
+	}
 private:
     friend class AccessImpl<AccessKey, public_t, private_t>;
     inline private_t& get_private_object() { return m_privateSignal; }
@@ -37,5 +73,5 @@ private:
 
 
 template<typename Signature,typename AccessKey>
-using signal_t = signal_validator<fteng::SignalImpl<Signature>, AccessKey>;
+using public_signal_t = signal_validator<AccessKey, Signature>;
 } // namespace MHTL
