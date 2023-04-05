@@ -4,6 +4,7 @@
 #include <optional>
 #include <utility>
 #include "utils.h"
+#include <memory>
 namespace MHTL
 {
 
@@ -52,9 +53,11 @@ private:
 	std::optional<error_t> m_error;
 public:
 	std::optional<Payload_t> m_payload;
+
 	result(Payload_t i_payload): m_payload(i_payload) {
 
 	}
+	result() = delete;
 
 	result(error_t i_error): m_error(i_error) {
 
@@ -106,6 +109,43 @@ public:
 	inline bool operator!=(const success_t& success) const
 	{
 		return m_error.has_value();
+	}
+};
+
+
+template<class Payload_t, class error_t>
+class result<std::unique_ptr<Payload_t>, error_t> {
+private:
+	static_assert(is_template_of<error_t, error>::value, "Error_t is not an instance of error Template");
+	std::optional<error_t> m_error;
+public:
+	std::optional<std::unique_ptr<Payload_t>> m_payload;
+
+	result(std::unique_ptr<Payload_t> i_payload) : m_payload(std::move(i_payload)) {
+
+	}
+	result() = delete;
+
+	result(error_t i_error) : m_error(i_error) {
+
+	}
+
+	inline const error_t& error()
+	{
+		return m_error.value();
+	}
+
+	inline std::unique_ptr<Payload_t> extract_payload() {
+		return std::exchange(m_payload, std::nullopt).value();
+	}
+
+	inline bool operator==(const success_t& success) const
+	{
+		return m_payload.has_value();
+	}
+	inline bool operator!=(const success_t& success) const
+	{
+		return !m_payload.has_value();
 	}
 };
 }

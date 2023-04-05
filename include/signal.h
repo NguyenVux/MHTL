@@ -42,18 +42,18 @@ public:
 
 
 	template<auto PMF, class C>
-	fteng::connection_raw connect(C* object) const
+	fteng::connection connect(C* object) const
 	{
-		return std::move(m_privateSignal.connect<PMF,c>(func));
+		return std::move(m_privateSignal.connect<PMF,C>(object));
 	}
 
 	template<auto func>
-	fteng::connection_raw connect() const
+	fteng::connection connect() const
 	{
 		return std::move(m_privateSignal.connect(func));
 	}
 
-	fteng::connection_raw connect(void(*func)(Args...)) const
+	fteng::connection connect(void(*func)(Args...)) const
 	{
 		return std::move(m_privateSignal.connect(func));
 	}
